@@ -1,4 +1,5 @@
 # CoFreezer
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/693/badge)](https://bestpractices.coreinfrastructure.org/projects/693)
 
 基于ESP8266制作的冰箱
 ---
