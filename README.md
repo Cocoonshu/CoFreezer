@@ -1,7 +1,5 @@
 # CoFreezer
 
-[![状态](https://badges.gitter.im/Join Chat.svg)]() [![编码中](https://bestpractices.coreinfrastructure.org/projects/29/badge)]()
-
 基于ESP8266制作的冰箱
 ---
 携带的配件有：
