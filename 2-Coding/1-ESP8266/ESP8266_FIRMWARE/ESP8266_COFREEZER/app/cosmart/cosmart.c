@@ -22,9 +22,13 @@
 #include "cosmart/interruptmanager.h"
 #include "user_interface.h"
 
+#include "driver/key.h"
+
 // 内部函数声明
 LOCAL void ICACHE_FLASH_ATTR showSystemInformation();
 LOCAL void ICACHE_FLASH_ATTR onSystemInitialized();
+LOCAL void ICACHE_FLASH_ATTR onButtonPressed();
+LOCAL void ICACHE_FLASH_ATTR onButtonLongPressed();
 
 ///////////////
 //  外部函数   //
@@ -116,6 +120,21 @@ LOCAL void ICACHE_FLASH_ATTR onSystemInitialized() {
 
 	// 启动广播接收器，接收控制端广播
 	WiFi_setupProtocolBridge();
+
+	// 初始化按钮
+	struct single_key_param* buttonParam = key_init_single(GPIO_ID_PIN(4), PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4, onButtonLongPressed, onButtonPressed);
+	struct keys_param*       keysParam   = (struct keys_param*)os_zalloc(sizeof(struct keys_param));
+	keysParam->key_num    = 1;
+	keysParam->single_key = &buttonParam;
+	key_init(keysParam);
+}
+
+LOCAL void onButtonPressed() {
+	Log_printfln("[onButtonPressed]");
+}
+
+LOCAL void onButtonLongPressed() {
+	Log_printfln("[onButtonLongPressed]");
 }
 
 LOCAL void ICACHE_FLASH_ATTR showSystemInformation() {

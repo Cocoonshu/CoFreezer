@@ -63,6 +63,7 @@
 #define PWM_MUX_14 (FUNC_GPIO14)
 #define PWM_MUX_15 (FUNC_GPIO15)
 
+
 #define PWM_PIN_00 (0x0)
 #define PWM_PIN_01 (0x1)
 #define PWM_PIN_02 (0x2)

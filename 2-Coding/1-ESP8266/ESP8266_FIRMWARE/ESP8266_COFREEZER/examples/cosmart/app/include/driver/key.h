@@ -34,8 +34,8 @@ struct single_key_param {
     uint8 gpio_id;
     uint8 gpio_func;
     uint32 gpio_name;
-    os_timer_t key_5s;
-    os_timer_t key_50ms;
+    os_timer_t key_long;
+    os_timer_t key_short;
     key_function short_press;
     key_function long_press;
 };

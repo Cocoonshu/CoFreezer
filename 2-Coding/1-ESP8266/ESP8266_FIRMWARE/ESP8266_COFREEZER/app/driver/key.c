@@ -30,6 +30,8 @@
 #include "user_interface.h"
 
 #include "driver/key.h"
+#define LONG_PRESS_INTERVAL  2000
+#define SHORT_PRESS_INTERVAL 50
 
 LOCAL void key_intr_handler(struct keys_param *keys);
 
@@ -94,15 +96,15 @@ key_init(struct keys_param *keys)
 }
 
 /******************************************************************************
- * FunctionName : key_5s_cb
- * Description  : long press 5s timer callback
+ * FunctionName : key_long_cb
+ * Description  : long press 2s timer callback
  * Parameters   : single_key_param *single_key - single key parameter
  * Returns      : none
 *******************************************************************************/
 LOCAL void ICACHE_FLASH_ATTR
-key_5s_cb(struct single_key_param *single_key)
+key_long_cb(struct single_key_param *single_key)
 {
-    os_timer_disarm(&single_key->key_5s);
+    os_timer_disarm(&single_key->key_long);
 
     // low, then restart
     if (0 == GPIO_INPUT_GET(GPIO_ID_PIN(single_key->gpio_id))) {
@@ -113,19 +115,19 @@ key_5s_cb(struct single_key_param *single_key)
 }
 
 /******************************************************************************
- * FunctionName : key_50ms_cb
+ * FunctionName : key_short_cb
  * Description  : 50ms timer callback to check it's a real key push
  * Parameters   : single_key_param *single_key - single key parameter
  * Returns      : none
 *******************************************************************************/
 LOCAL void ICACHE_FLASH_ATTR
-key_50ms_cb(struct single_key_param *single_key)
+key_short_cb(struct single_key_param *single_key)
 {
-    os_timer_disarm(&single_key->key_50ms);
+    os_timer_disarm(&single_key->key_short);
 
     // high, then key is up
     if (1 == GPIO_INPUT_GET(GPIO_ID_PIN(single_key->gpio_id))) {
-        os_timer_disarm(&single_key->key_5s);
+        os_timer_disarm(&single_key->key_long);
         single_key->key_level = 1;
         gpio_pin_intr_state_set(GPIO_ID_PIN(single_key->gpio_id), GPIO_PIN_INTR_NEGEDGE);
 
@@ -158,17 +160,17 @@ key_intr_handler(struct keys_param *keys)
             GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpio_status & BIT(keys->single_key[i]->gpio_id));
 
             if (keys->single_key[i]->key_level == 1) {
-                // 5s, restart & enter softap mode
-                os_timer_disarm(&keys->single_key[i]->key_5s);
-                os_timer_setfn(&keys->single_key[i]->key_5s, (os_timer_func_t *)key_5s_cb, keys->single_key[i]);
-                os_timer_arm(&keys->single_key[i]->key_5s, 5000, 0);
+                // 2s, restart & enter softap mode
+                os_timer_disarm(&keys->single_key[i]->key_long);
+                os_timer_setfn(&keys->single_key[i]->key_long, (os_timer_func_t *)key_long_cb, keys->single_key[i]);
+                os_timer_arm(&keys->single_key[i]->key_long, LONG_PRESS_INTERVAL, 0);
                 keys->single_key[i]->key_level = 0;
                 gpio_pin_intr_state_set(GPIO_ID_PIN(keys->single_key[i]->gpio_id), GPIO_PIN_INTR_POSEDGE);
             } else {
                 // 50ms, check if this is a real key up
-                os_timer_disarm(&keys->single_key[i]->key_50ms);
-                os_timer_setfn(&keys->single_key[i]->key_50ms, (os_timer_func_t *)key_50ms_cb, keys->single_key[i]);
-                os_timer_arm(&keys->single_key[i]->key_50ms, 50, 0);
+                os_timer_disarm(&keys->single_key[i]->key_short);
+                os_timer_setfn(&keys->single_key[i]->key_short, (os_timer_func_t *)key_short_cb, keys->single_key[i]);
+                os_timer_arm(&keys->single_key[i]->key_short, SHORT_PRESS_INTERVAL, 0);
             }
         }
     }
