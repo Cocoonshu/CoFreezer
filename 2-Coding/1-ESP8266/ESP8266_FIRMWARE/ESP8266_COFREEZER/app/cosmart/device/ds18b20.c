@@ -20,7 +20,7 @@ typedef struct DS18B20 {
 
 LOCAL uint32   mBusPort     = 0;
 LOCAL DS18B20* mDeviceGroup = NULL;
-LOCAL uint16   mDeviceCount = NULL;
+LOCAL uint16   mDeviceCount = 0;
 
 
 void ICACHE_FLASH_ATTR DS18B20_initialize(const uint32 busPort) {
@@ -78,25 +78,25 @@ uint16 ICACHE_FLASH_ATTR DS18B20_getDeviceCount() {
 	return mDeviceCount;
 }
 
-float ICACHE_FLASH_ATTR DS18B20_getDeviceTemperature(const uint8 index) {
+float ICACHE_FLASH_ATTR DS18B20_getDeviceTemperature(const uint16 index) {
 	if (index < 0 || index >= mDeviceCount) {
 		return 0.0f;
 	}
 
 	system_soft_wdt_feed();
 
-	DS18B20* device = mDeviceGroup[index];
+	DS18B20 device = mDeviceGroup[index];
 	onewire_init(mBusPort);
 
-	uint8 crc = onewire_crc8(device->rom, 7);
-	if (crc == (device->rom[7])) {
-		if (device->rom[0] == DS18S20_FAMILY || device->rom[0] == DS18B20_FAMILY) {
+	uint8 crc = onewire_crc8(device.rom, 7);
+	if (crc == (device.rom[7])) {
+		if (device.rom[0] == DS18S20_FAMILY || device.rom[0] == DS18B20_FAMILY) {
 			onewire_reset(mBusPort);
-			onewire_select(mBusPort, device->rom);
+			onewire_select(mBusPort, device.rom);
 			onewire_write(mBusPort, CONVERT_TEMPERATURE, 1);
 
 			uint8 present = onewire_reset(mBusPort);
-			onewire_select(mBusPort, device->rom);
+			onewire_select(mBusPort, device.rom);
 			onewire_write(mBusPort, READ_SCRATCHPAD, 1);
 
 			uint8 buffer[9];
@@ -107,12 +107,12 @@ float ICACHE_FLASH_ATTR DS18B20_getDeviceTemperature(const uint8 index) {
 				if (temperature > 32767) {
 					temperature -= 65536;
 				}
-				if (device->rom[0] == DS18B20_FAMILY) {
+				if (device.rom[0] == DS18B20_FAMILY) {
 					temperature *= 625;
 				} else {
 					temperature *= 5000;
 				}
-				device->temperature = temperature;
+				device.temperature = temperature;
 
 				Log_println("[DS18B20_getDeviceTemperature] Temperature = %f", (temperature / 10000.0f));
 				return temperature / 10000.0f;
